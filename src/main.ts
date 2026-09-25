@@ -14,6 +14,16 @@ window.addEventListener('DOMContentLoaded', () => {
   const config = createGameConfig([BootScene, OutpostScene, UIScene, SiegeBattleScene]);
   const game = new Phaser.Game(config);
 
+  // Smooth orientation / resize handler for mobile devices
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+      game.scale.refresh();
+    }, 150);
+  });
+  window.addEventListener('resize', () => {
+    game.scale.refresh();
+  });
+
   // Automation / E2E Testing Hook
   (window as unknown as { __EMBER__: unknown }).__EMBER__ = {
     game,
