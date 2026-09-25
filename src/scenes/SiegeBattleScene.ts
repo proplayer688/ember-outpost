@@ -78,6 +78,7 @@ export class SiegeBattleScene extends Phaser.Scene {
     this.cameras.main.setBounds(-worldW / 2, -worldH / 2, worldW, worldH);
     this.cameras.main.centerOn(0, 0);
     this.cameras.main.setBackgroundColor('#070A13');
+    this.cameras.main.setZoom(1.32);
 
     // 2. Render Tactical Ground Grid & Deployment Boundary
     this.buildBattlefieldGrid();
@@ -229,6 +230,7 @@ export class SiegeBattleScene extends Phaser.Scene {
 
   private setupDeploymentInput(): void {
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      Audio.unlock();
       if (this.isBattleOver) return;
 
       // Ignore touches on top HUD or bottom deck

@@ -42,27 +42,62 @@ export class AudioManager {
 
       this.updateVolumes();
 
-      // Listen for first user gesture to unlock AudioContext
-      const unlock = () => {
-        if (!this.ctx) return;
-        if (this.ctx.state === 'suspended') {
-          this.ctx.resume().then(() => {
-            this.isUnlocked = true;
-            this.startBGM();
-          });
-        } else {
-          this.isUnlocked = true;
-          this.startBGM();
-        }
-        window.removeEventListener('pointerdown', unlock);
-        window.removeEventListener('keydown', unlock);
+      // Listen for all possible mobile and desktop gestures to unlock AudioContext
+      const unlockHandler = () => {
+        this.unlock();
       };
 
-      window.addEventListener('pointerdown', unlock, { once: true });
-      window.addEventListener('keydown', unlock, { once: true });
+      const events = ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'click', 'keydown'];
+      events.forEach(evt => {
+        window.addEventListener(evt, unlockHandler, { passive: true });
+        document.addEventListener(evt, unlockHandler, { passive: true });
+      });
     } catch (e) {
       console.warn('Web Audio not supported in this environment:', e);
     }
+  }
+
+  public unlock(): void {
+    if (!this.ctx) {
+      this.init();
+    }
+    if (!this.ctx) return;
+
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume().then(() => {
+        this.isUnlocked = true;
+        this.primeHardware();
+        this.startBGM();
+      }).catch(() => {});
+    } else {
+      this.isUnlocked = true;
+      this.primeHardware();
+      this.startBGM();
+    }
+  }
+
+  private primeHardware(): void {
+    if (!this.ctx) return;
+    try {
+      // Play a 1-sample silent buffer to unlock iOS Safari and Android Chrome audio hardware
+      const buffer = this.ctx.createBuffer(1, 1, 22050);
+      const source = this.ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(this.ctx.destination);
+      source.start(0);
+    } catch (_) {}
+  }
+
+  private canPlaySFX(): boolean {
+    if (!this.ctx) {
+      this.init();
+    }
+    if (!this.ctx || GameState.settings.isMuted) return false;
+
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+    return true;
   }
 
   public updateVolumes(): void {
@@ -93,7 +128,7 @@ export class AudioManager {
 
     this.bgmStep = 0;
     this.bgmTimer = window.setInterval(() => {
-      if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+      if (!this.canPlaySFX() || !this.ctx) return;
 
       const time = this.ctx.currentTime;
       const freq = melody[this.bgmStep % melody.length];
@@ -145,7 +180,7 @@ export class AudioManager {
   // --- Tactile SFX Synthesizers ---
 
   public playFootstep(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -165,7 +200,7 @@ export class AudioManager {
   }
 
   public playUIClick(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -185,7 +220,7 @@ export class AudioManager {
   }
 
   public playInteractChime(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 major triad
 
@@ -210,7 +245,7 @@ export class AudioManager {
   }
 
   public playSuccessFanfare(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const notes = [440, 554.37, 659.25, 880]; // A major fanfare
 
@@ -235,7 +270,7 @@ export class AudioManager {
   }
 
   public playError(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -255,7 +290,7 @@ export class AudioManager {
   }
 
   public playHarvest(type: 'wood' | 'crystals' | 'stone'): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
 
     if (type === 'crystals') {
@@ -302,7 +337,7 @@ export class AudioManager {
   }
 
   public playNeedleHit(quality: 'perfect' | 'excellent' | 'good' | 'miss'): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
 
     if (quality === 'perfect') {
@@ -357,7 +392,7 @@ export class AudioManager {
   }
 
   public playLevelUp(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const notes = [329.63, 440.00, 554.37, 659.25, 880.00]; // E, A, C#, E, A ascending
     notes.forEach((freq, idx) => {
@@ -377,7 +412,7 @@ export class AudioManager {
   }
 
   public playSmelt(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -395,7 +430,7 @@ export class AudioManager {
   // --- COMBAT & SIEGE SYNTHESIZERS ---
 
   public playLaserShot(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -415,7 +450,7 @@ export class AudioManager {
   }
 
   public playMortarLaunch(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -435,7 +470,7 @@ export class AudioManager {
   }
 
   public playExplosion(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -455,7 +490,7 @@ export class AudioManager {
   }
 
   public playTeslaZap(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -476,7 +511,7 @@ export class AudioManager {
   }
 
   public playDemolition(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -496,7 +531,7 @@ export class AudioManager {
   }
 
   public playUnitDeploy(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -516,7 +551,7 @@ export class AudioManager {
   }
 
   public playAlarmSiren(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -537,7 +572,7 @@ export class AudioManager {
   }
 
   public playStarEarned(): void {
-    if (!this.ctx || this.ctx.state !== 'running' || GameState.settings.isMuted) return;
+    if (!this.canPlaySFX() || !this.ctx) return;
     const time = this.ctx.currentTime;
     const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
     notes.forEach((freq, idx) => {

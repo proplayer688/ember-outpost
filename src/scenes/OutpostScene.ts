@@ -11,6 +11,7 @@ import { InputManager } from '../input/InputManager';
 import { InteractionSystem } from '../systems/InteractionSystem';
 import { HarvestSystem } from '../systems/HarvestSystem';
 import { ParticleFactory } from '../rendering/ParticleFactory';
+import { Audio } from '../audio/AudioManager';
 
 export class OutpostScene extends Phaser.Scene {
   public mascot!: MascotKeeper;
@@ -80,6 +81,11 @@ export class OutpostScene extends Phaser.Scene {
 
     // 9. Attach Ambient Particle Emitters
     this.setupParticles();
+
+    // Unlock Web Audio on any touch/click
+    this.input.on('pointerdown', () => {
+      Audio.unlock();
+    });
 
     // Fade in camera smoothly
     this.cameras.main.fadeIn(400, 7, 10, 19);
