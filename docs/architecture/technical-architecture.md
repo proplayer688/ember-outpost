@@ -103,7 +103,7 @@ export interface ISocialService {
   unlockBadge(badgeId: string): Promise<void>;
 }
 ```
-*In MVP, `MockSocialService` simulates realistic friend interactions (e.g. Umesh vs Alex). In production, this connects to a WebSocket server or decentralized attestations.*
+*In MVP, `MockSocialService` simulates realistic friend interactions (e.g. Ignis vs Sentinel). In production, this connects to a WebSocket server or decentralized attestations.*
 
 ---
 

@@ -50,7 +50,7 @@ Nobody has combined:
 
 ### Pillar 5: Personal Friend Rivalry vs. Faceless Global Leaderboards
 * **Competitors:** Either single-player or an anonymous global leaderboard list.
-* **Ember Outpost:** The **Friend Gate & Rivalry System**. Players inspect personalized Friend dossiers (e.g., `UMESH vs ALEX`), track lifetime head-to-head match records, maintain win streaks, and unlock unique rivalry badges (*Rival Crusher*, *Speed Keeper*, *Outpost Master*).
+* **Ember Outpost:** The **Friend Gate & Rivalry System**. Players inspect personalized Friend dossiers (e.g., `IGNIS vs VEX`), track lifetime head-to-head match records, maintain win streaks, and unlock unique rivalry badges (*Rival Crusher*, *Speed Keeper*, *Outpost Master*).
 
 ### Pillar 6: Frictionless Accessibility (Zero-Wallet Onboarding)
 * **Competitors:** Demand wallet connection and Generation NFT verification before rendering the first frame, bouncing 90% of casual web players.
